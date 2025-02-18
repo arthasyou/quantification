@@ -1,0 +1,21 @@
+[package]
+name = "auth_rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.8", features = ["macros"] }
+service_utils_rs = { version = "0.3.3", features = ["jwt", "db", "http"] }
+surrealdb = { version = "2" }
+thiserror = "2"
+bcrypt = "0.17"
+uuid = { version = "1", features = ["v4", "fast-rng", "macro-diagnostics"] }
+utoipa = { version = "5", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "9", features = ["axum"] }
+utoipa-axum = { version = "0.2" }
+anyhow = "1"
+chrono = "0.4"
+rust_decimal = "1"
