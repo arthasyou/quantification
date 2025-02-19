@@ -7,7 +7,9 @@ use service_utils_rs::services::jwt::Jwt;
 
 use crate::database::auth_db;
 use crate::error::error_code;
-use crate::models::auth_model::{LoginRequest, LoginResponse, SignupRequest, User, UserInput};
+use crate::models::auth_model::{
+    Auth, AuthInput, Login, LoginRequest, LoginResponse, SignupRequest,
+};
 use crate::models::{CommonError, CommonResponse, IntoCommonResponse};
 
 #[utoipa::path(
@@ -32,12 +34,12 @@ pub async fn signup(
         )
     })?;
 
-    let user = UserInput {
+    let user = AuthInput {
         username: payload.username,
         password: hashed_password,
     };
 
-    auth_db::create_user(user).await.map_err(|e| {
+    auth_db::db_singup(user).await.map_err(|e| {
         eprintln!("Database query error: {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -73,17 +75,16 @@ pub async fn login(
             Json(error_code::SERVER_ERROR.into()),
         )
     })?;
-    let data = LoginResponse {
+    let data = Login {
         access_token: accece,
         refresh: refleash,
     };
-
     let res = data.into_common_response_data();
     Ok(Json(res))
 }
 
-async fn get_current_user(username: &str) -> Result<User, (StatusCode, Json<CommonError>)> {
-    let existing_user = auth_db::get_user(username).await.map_err(|_| {
+async fn get_current_user(username: &str) -> Result<Auth, (StatusCode, Json<CommonError>)> {
+    let existing_user = auth_db::get_auth(username).await.map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(error_code::SERVER_ERROR.into()),
@@ -108,7 +109,7 @@ fn verify_password(password: &str, hash: &str) -> Result<bool, (StatusCode, Json
 }
 
 async fn is_username_taken(username: &str) -> Result<(), (StatusCode, Json<CommonError>)> {
-    let existing_user = auth_db::get_user(username).await.map_err(|e| {
+    let existing_user = auth_db::get_auth(username).await.map_err(|e| {
         eprintln!("Database query error: {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,

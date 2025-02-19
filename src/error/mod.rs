@@ -16,6 +16,12 @@ pub enum Error {
     #[error("db error: {0}")]
     DbError(#[from] surrealdb::Error),
 
+    #[error("Request failed: {0}")]
+    RequestError(#[from] reqwest::Error),
+
+    #[error("error message: {0}")]
+    ErrorMessage(String),
+
     #[error("{message:} ({line:}, {column})")]
     CustomError {
         message: String,

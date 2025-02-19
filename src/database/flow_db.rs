@@ -6,18 +6,16 @@ use crate::{
     models::fee_model::{CreateFeeRequest, Fee},
 };
 
-pub async fn create_fee_table() -> Result<()> {
+pub async fn create_flow_table() -> Result<()> {
     let query = "
-    DEFINE TABLE IF NOT EXISTS fee SCHEMALESS PERMISSIONS FULL;
+    DEFINE TABLE IF NOT EXISTS flow SCHEMALESS PERMISSIONS FULL;
 
-    DEFINE FIELD IF NOT EXISTS user_id ON TABLE fee TYPE string READONLY;
-    DEFINE FIELD IF NOT EXISTS agent_id ON TABLE fee TYPE string READONLY;
-    DEFINE FIELD IF NOT EXISTS amount ON TABLE fee TYPE decimal READONLY;
-    DEFINE FIELD IF NOT EXISTS created_at ON TABLE fee VALUE time::now() READONLY;
+    DEFINE FIELD IF NOT EXISTS user_id ON TABLE flow TYPE string READONLY;
+    DEFINE FIELD IF NOT EXISTS amount ON TABLE flow TYPE decimal READONLY;
+    DEFINE FIELD IF NOT EXISTS created_at ON TABLE flow VALUE time::now() READONLY;
 
-    DEFINE INDEX IF NOT EXISTS user_id_index ON TABLE fee FIELDS user_id;
-    DEFINE INDEX IF NOT EXISTS agent_id_index ON TABLE fee FIELDS agent_id;
-    DEFINE INDEX IF NOT EXISTS created_at_index ON TABLE fee FIELDS created_at;
+    DEFINE INDEX IF NOT EXISTS user_id_index ON TABLE flow FIELDS user_id;
+    DEFINE INDEX IF NOT EXISTS created_at_index ON TABLE flow FIELDS created_at;
    ";
 
     let db = get_db();

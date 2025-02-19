@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, Json};
+use axum::{http::StatusCode, Extension, Json};
 
 use crate::{
     database::fee_db::db_create_fee,
@@ -7,8 +7,10 @@ use crate::{
 };
 
 pub async fn create_fee(
+    Extension(user_id): Extension<String>,
     Json(payload): Json<CreateFeeRequest>,
 ) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
+    println!("user_id: {:?}", user_id);
     db_create_fee(payload).await.map_err(|e| {
         eprintln!("Database query error: {:?}", e);
         (

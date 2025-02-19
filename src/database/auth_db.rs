@@ -1,18 +1,18 @@
 use service_utils_rs::services::db::get_db;
 
 use crate::error::Result;
-use crate::models::auth_model::{User, UserInput};
+use crate::models::auth_model::{Auth, AuthInput};
 
-pub async fn create_users_table() -> Result<()> {
+pub async fn create_auth_table() -> Result<()> {
     let query = "
-        DEFINE TABLE IF NOT EXISTS user SCHEMALESS PERMISSIONS FULL;
+        DEFINE TABLE IF NOT EXISTS auth SCHEMALESS PERMISSIONS FULL;
     
-        DEFINE FIELD IF NOT EXISTS username ON TABLE user TYPE string;
-        DEFINE FIELD IF NOT EXISTS password ON TABLE user TYPE string;
-        DEFINE FIELD IF NOT EXISTS uuid ON TABLE user TYPE string;
+        DEFINE FIELD IF NOT EXISTS username ON TABLE auth TYPE string READONLY;
+        DEFINE FIELD IF NOT EXISTS password ON TABLE auth TYPE string;
+        DEFINE FIELD IF NOT EXISTS uuid ON TABLE auth TYPE string READONLY;
   
-        DEFINE INDEX IF NOT EXISTS unique_uuid ON TABLE user FIELDS uuid UNIQUE;
-        DEFINE INDEX IF NOT EXISTS unique_username ON TABLE user FIELDS username UNIQUE;
+        DEFINE INDEX IF NOT EXISTS unique_uuid ON TABLE auth FIELDS uuid UNIQUE;
+        DEFINE INDEX IF NOT EXISTS unique_username ON TABLE auth FIELDS username UNIQUE;
        ";
 
     let db = get_db();
@@ -20,21 +20,21 @@ pub async fn create_users_table() -> Result<()> {
     Ok(())
 }
 
-pub async fn create_user(input: UserInput) -> Result<()> {
+pub async fn db_singup(input: AuthInput) -> Result<()> {
     let uuid: String = uuid::Uuid::new_v4().to_string();
-    let user = User {
+    let user = Auth {
         uuid,
         username: input.username,
         password: input.password,
     };
     let db = get_db();
-    let _r: Option<User> = db.create(("user", &user.username)).content(user).await?;
+    let _r: Option<Auth> = db.create(("auth", &user.username)).content(user).await?;
     Ok(())
 }
 
-pub async fn get_user(username: &str) -> Result<Option<User>> {
+pub async fn get_auth(username: &str) -> Result<Option<Auth>> {
     let db = get_db();
-    let r: Option<User> = db.select(("user", username)).await?;
+    let r: Option<Auth> = db.select(("auth", username)).await?;
     println!("get user: {:?}", r);
     Ok(r)
 }
