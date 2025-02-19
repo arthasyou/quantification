@@ -17,7 +17,7 @@ status_error_codes! {
     (10, USER_EXIST, "user exist");
     (11, USER_NOT_EXIST, "user not exist");
     (12, PASSWORD_ERROR, "password error");
-    (13, USER_NOT_LOGIN, "user not login");
+    (13, INVALIAD_SYMBOLE, "invalid symbole");
     (14, USER_NOT_FOUND, "user not found");
     (15, USER_NOT_AUTHORIZED, "user not authorized");
     (16, USER_NOT_PERMISSION, "user not permission");

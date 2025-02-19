@@ -5,12 +5,13 @@ use crate::{
     database::strategy_db::db_update_strategy,
     error::error_code,
     models::{
-        trade_model::{GetRiskResponse, GetStategyResponse, UpdateStrategy},
+        trade_model::{CreatePositionRequest, GetRiskResponse, GetStategyResponse, UpdateStrategy},
         CommonError, CommonResponse, IntoCommonResponse,
     },
     static_items::{
+        price::get_symbol_price,
         secret_key::get_secret_key,
-        strategy::{get_user_strategy, update_user_strategy, StrategyConfig},
+        strategy::{get_user_spec_strategy, get_user_strategy, update_user_strategy},
     },
 };
 
@@ -90,6 +91,40 @@ pub async fn update_strategy(
             Json(error_code::SERVER_ERROR.into()),
         )
     })?;
+
+    let res = CommonResponse::default();
+    Ok(Json(res))
+}
+
+#[utoipa::path(
+    post,
+    path = "/create_position",
+    request_body = UpdateStrategy,
+    responses(
+        (status = 200, description = "Succeed", body = CommonResponse),
+        (status = 500, description = "Internal server error", body = CommonError)
+    ),
+    description = "开仓"
+)]
+pub async fn create_position(
+    Extension(user_id): Extension<String>,
+    Json(payload): Json<CreatePositionRequest>,
+) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
+    let price = get_symbol_price(&payload.symbol).await.map_err(|_e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(error_code::INVALIAD_SYMBOLE.into()),
+        )
+    })?;
+
+    let strategy = get_user_spec_strategy(&user_id, payload.strategy_id)
+        .await
+        .ok_or_else(|| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(error_code::SERVER_ERROR.into()),
+            )
+        })?;
 
     let res = CommonResponse::default();
     Ok(Json(res))

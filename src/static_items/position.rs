@@ -6,10 +6,11 @@ use std::{
     sync::{Arc, LazyLock},
 };
 use tokio::sync::Mutex;
+use utoipa::ToSchema;
 
 use super::{strategy::Strategy, symbol::get_symbols};
 
-#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
+#[derive(Debug, PartialEq, Deserialize, Serialize, ToSchema, Clone)]
 pub enum Direction {
     Long,  // 做多
     Short, // 做空

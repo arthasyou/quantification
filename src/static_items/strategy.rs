@@ -148,3 +148,17 @@ pub async fn delete_user_strategy(user_id: &str) {
 pub async fn get_user_strategy(user_id: &str) -> Option<StrategyConfig> {
     get_strategy_manager().get_strategy(user_id).await
 }
+
+pub async fn get_user_spec_strategy(user_id: &str, spec_id: u8) -> Option<Vec<Strategy>> {
+    let cfg = get_user_strategy(user_id).await;
+    match cfg {
+        Some(cfg) => {
+            if spec_id == 1 {
+                Some(cfg.s1)
+            } else {
+                Some(cfg.s2)
+            }
+        }
+        None => None,
+    }
+}
