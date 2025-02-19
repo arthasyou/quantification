@@ -1,6 +1,10 @@
 use crate::error::{Error, Result};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt, sync::Arc};
+use std::{
+    collections::HashMap,
+    fmt,
+    sync::{Arc, LazyLock},
+};
 use tokio::sync::Mutex;
 
 use super::{strategy::Strategy, symbol::get_symbols};
@@ -198,10 +202,6 @@ pub fn calculate_stop_price(
     }
 }
 
-pub struct PositionManager {
-    keys: HashMap<String, Mutex<Vec<Position>>>,
-}
-
 fn get_strategy(percentage: f64, strategy: &mut Vec<Strategy>) -> f64 {
     strategy.retain(|adj| percentage <= adj.max.unwrap_or(f64::INFINITY));
 
@@ -209,6 +209,12 @@ fn get_strategy(percentage: f64, strategy: &mut Vec<Strategy>) -> f64 {
         .iter()
         .find(|adj| percentage >= adj.min && adj.max.map_or(true, |max| percentage < max))
         .map_or_else(|| 0.0, |adj| adj.adjustment)
+}
+
+static POSITION: LazyLock<Arc<PositionManager>> = LazyLock::new(PositionManager::new);
+
+pub struct PositionManager {
+    keys: HashMap<String, Mutex<Vec<Position>>>,
 }
 
 impl PositionManager {
@@ -230,15 +236,12 @@ impl PositionManager {
             Err(Error::ErrorMessage("Symbol not found".to_string()))
         }
     }
+}
 
-    pub async fn delete_key(&self, key_id: &str) {
-        let mut map = self.keys.lock().await;
-        map.remove(key_id);
-    }
+fn get_position_manager() -> Arc<PositionManager> {
+    POSITION.clone()
+}
 
-    pub async fn get_key(&self, key_id: &str) -> Option<Position> {
-        let map = self.keys.lock().await;
-        let key = map.get(key_id).cloned();
-        key
-    }
+pub async fn inser_user_positon(position: Position) -> Result<()> {
+    get_position_manager().insert_position(position).await
 }
