@@ -1,4 +1,7 @@
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    utils::create_position_order,
+};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -27,9 +30,8 @@ impl fmt::Display for Direction {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Position {
-    pub id: usize,
-    pub user_id: String,
     pub order_id: u64,
+    pub user_id: String,
     pub stop_order: u64,
     pub symbol: String, // 货币或资产符号，表示此交易涉及的交易品种，如 "EUR/USD" 或 "AAPL"
     pub entry_price: f64, // 入场价格，交易开始时的初始价格
@@ -48,9 +50,8 @@ pub struct Position {
 impl Position {
     // 创建一个新的交易，自动设置止损为-5%（即95%）
     pub async fn new(
-        id: usize,
-        user_id: String,
         order_id: u64,
+        user_id: String,
         symbol: String,
         entry_price: f64,
         direction: Direction,
@@ -66,7 +67,6 @@ impl Position {
         let stop_order_id = order_id;
 
         Self {
-            id,
             user_id,
             order_id,
             stop_order: stop_order_id,
@@ -159,31 +159,24 @@ impl Position {
         {
             println!(
                 "止损触发于 {}，交易对 {}， 方向{:?}, 开仓价格: {}, 关闭交易 ID {}。",
-                price, self.symbol, self.direction, self.entry_price, self.id
+                price, self.symbol, self.direction, self.entry_price, self.order_id
             );
             let (side, position_side) = match self.direction {
                 Direction::Long => ("SELL", "LONG"),
                 Direction::Short => ("BUY", "SHORT"),
             };
-            // match create_order(
-            //     &self.symbol,
-            //     side,
-            //     position_side,
-            //     "MARKET",       // 假设使用市价单
-            //     &self.quantity, // 将数量格式化为字符串
-            //     None,           // 市价单无需价格
-            //     None,           // 此示例未设置止损价格
-            //     &self.api_key,
-            //     &self.api_secret,
-            // )
-            // .await
-            // {
-            //     Ok(order) => {
-            //         get_order_api(&self.symbol, order.orderId, &self.api_key, &self.api_secret)
-            //             .await;
-            //     }
-            //     Err(_) => {}
-            // }
+            let _ = create_position_order(
+                &self.symbol,
+                side,
+                position_side,
+                &self.quantity,
+                &self.api_key,
+                &self.api_secret,
+            )
+            .await
+            .map_err(|e| {
+                eprintln!("Create position error: {:?}", e);
+            });
 
             // 设置为已平仓状态
             self.is_closed = true;
@@ -228,13 +221,29 @@ impl PositionManager {
         Arc::new(PositionManager { keys: map })
     }
 
-    pub async fn insert_position(&self, position: Position) -> Result<()> {
+    async fn insert_position(&self, position: Position) -> Result<()> {
         if let Some(mutex_vec) = self.keys.get(&position.symbol) {
             let mut vec = mutex_vec.lock().await;
             vec.push(position);
             Ok(())
         } else {
             Err(Error::ErrorMessage("Symbol not found".to_string()))
+        }
+    }
+
+    async fn clear_position(&self, symbol: &str) {
+        if let Some(mutex_vec) = self.keys.get(symbol) {
+            let mut vec = mutex_vec.lock().await;
+            vec.retain(|t| if t.is_closed { false } else { true });
+        }
+    }
+
+    async fn update_position_price(&self, symbol: &str, price: (String, String)) {
+        if let Some(mutex_vec) = self.keys.get(symbol) {
+            let mut vec = mutex_vec.lock().await;
+            for t in vec.iter_mut() {
+                t.update_price(price.clone()).await;
+            }
         }
     }
 }
@@ -245,4 +254,14 @@ fn get_position_manager() -> Arc<PositionManager> {
 
 pub async fn inser_user_positon(position: Position) -> Result<()> {
     get_position_manager().insert_position(position).await
+}
+
+pub async fn clear_sombol_position(symbol: &str) {
+    get_position_manager().clear_position(symbol).await;
+}
+
+pub async fn update_symbol_position_price(symbol: &str, price: (String, String)) {
+    get_position_manager()
+        .update_position_price(symbol, price)
+        .await;
 }

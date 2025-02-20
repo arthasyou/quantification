@@ -9,7 +9,7 @@ use crate::error::{Error, Result};
 use hmac::{Hmac, Mac};
 use lazy_static::lazy_static;
 use reqwest::{Client, Method};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::de::DeserializeOwned;
 use sha2::Sha256;
 use std::{
     env,
@@ -25,11 +25,6 @@ lazy_static! {
         env::var("API_SECRET").expect("API_SECRET must be set in .env");
 }
 
-// const API_KEY: &str = "8a6bd7a5be0e9c77a090670921adbbc4cd4101f070d993f2b7378eab01749a54";
-// const API_SECRET: &str = "33089124cde387d199ceab2b469cc3939d9df3f6f42278052340c6880a8e0e31";
-// const BASE_URL: &str = "https://testnet.binancefuture.com";
-// const API_KEY: &str = "jIeoG4sLpJp8Sba8MJyKKLc46CzlRTHMMwXkgoVPkXm8DwcHaCNHLse8rpKwnAgx";
-// const API_SECRET: &str = "XsYec95qcxyou2XaXvYrT9KsgUVSgS3DLGKM0jzurtHrODpYUmHz7LCh6p4nZZNd";
 const BASE_URL: &str = "https://fapi.binance.com";
 
 fn create_signature(secret: &str, query_string: &str) -> String {
@@ -58,7 +53,7 @@ pub async fn request<T: DeserializeOwned>(url: &str, method: Method, api_key: &s
     let response_text = request_builder.send().await?.text().await?;
 
     // 打印响应内容
-    println!("Response content: {}", response_text);
+    // println!("Response content: {}", response_text);
 
     // 解析响应为指定类型
     let response = serde_json::from_str::<T>(&response_text).map_err(|e| {

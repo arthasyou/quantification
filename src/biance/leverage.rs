@@ -47,27 +47,9 @@ pub struct SymbolInfo {
     pub quantityPrecision: u8,
 }
 
-pub async fn get_quantity_precision(symbols: &Vec<String>) -> Result<HashMap<String, u8>> {
+pub async fn get_quantity_precision() -> Result<ExchangeInfo> {
     let endpoint = format!("{}/fapi/v1/exchangeInfo", super::BASE_URL);
-
     // 发起GET请求
     let response = super::request::<ExchangeInfo>(&endpoint, Method::GET, &super::API_KEY).await?;
-
-    // 构建结果 HashMap
-    let mut precision_map = HashMap::new();
-
-    for symbol in symbols {
-        let symbol_uppercase = symbol.to_uppercase();
-        if let Some(symbol_info) = response
-            .symbols
-            .iter()
-            .find(|s| s.symbol == *symbol_uppercase)
-        {
-            precision_map.insert(symbol.to_string(), symbol_info.quantityPrecision);
-        } else {
-            return Err(Error::SystemError(format!("未找到交易对：{}", symbol)));
-        }
-    }
-
-    Ok(precision_map)
+    Ok(response)
 }

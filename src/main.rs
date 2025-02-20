@@ -5,31 +5,31 @@ mod handlers;
 mod models;
 mod routes;
 mod static_items;
+mod utils;
+mod websocket;
 
 use std::sync::Arc;
 
-use database::{
-    create_tables, fee_db::get_sum_fee, strategy_db::db_create_strategy, user_db::db_update_player,
-};
+use database::create_tables;
+use dotenvy::dotenv;
 use service_utils_rs::{
     services::{db::init_db, http::http_server, jwt::Jwt},
     settings::Settings,
 };
-use static_items::price::get_price;
+use static_items::percision::init_percisions;
+use websocket::connection::start_websocket;
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
     let settings = Settings::new("config/services.toml").unwrap();
     init_db(settings.surrealdb).await.unwrap();
     create_tables().await.unwrap();
-    db_update_player().await.unwrap();
-
-    // let p = get_price();
-    // println!("price: {:?}", p);
+    init_percisions().await;
 
     let jwt = Arc::new(Jwt::new(settings.jwt));
     let router = routes::create_routes(jwt);
-    http_server::start(settings.http.port, router)
-        .await
-        .unwrap();
+    let http_task = http_server::start(settings.http.port, router);
+    let ws_task = start_websocket();
+    let _ = tokio::join!(ws_task, http_task);
 }

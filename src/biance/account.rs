@@ -34,11 +34,12 @@ pub async fn get_account() -> Result<AccountInfo> {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BiannceOrder {
+    pub orderId: u64,
     pub avgPrice: String,
     pub executedQty: String,
 }
 
-pub async fn get_order_api(
+pub async fn get_biance_active_order(
     symbol: &str,
     order_id: u64,
     key: &str,

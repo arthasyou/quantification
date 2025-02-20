@@ -24,7 +24,7 @@ pub struct OrderResponse {
     // 添加其他需要的字段
 }
 
-pub async fn create_order(
+pub async fn create_biance_order(
     symbol: &str,
     side: &str,          // 买入或卖出： "BUY" 或 "SELL"
     position_side: &str, // 仓位方向，例如 "LONG" 或 "SHORT"
@@ -54,11 +54,11 @@ pub async fn create_order(
     }
 
     // 生成签名
-    let signature = super::create_signature(&super::API_SECRET, &query_string);
+    let signature = super::create_signature(secret, &query_string);
     let url = format!("{}?{}&signature={}", endpoint, query_string, signature);
 
     // 使用 post_request 发送带 body 的请求
-    let response = super::request::<OrderResponse>(&url, Method::POST, &super::API_KEY).await?;
+    let response = super::request::<OrderResponse>(&url, Method::POST, key).await?;
 
     Ok(response)
 }

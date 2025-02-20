@@ -1,14 +1,16 @@
 use super::symbol::get_symbols;
 use crate::error::{Error, Result};
+use serde::Deserialize;
 use std::{
     collections::HashMap,
     sync::{Arc, LazyLock},
 };
 use tokio::sync::Mutex;
 
+#[derive(Debug, Deserialize, Clone)]
 pub struct Price {
-    buy: String,
-    sell: String,
+    pub buy: String,
+    pub sell: String,
 }
 
 impl Price {
@@ -37,8 +39,7 @@ fn init_price() -> Arc<HashMap<String, Mutex<(String, String)>>> {
 
     Arc::new(map)
 }
-
-pub fn get_price() -> Arc<HashMap<String, Mutex<(String, String)>>> {
+fn get_price() -> Arc<HashMap<String, Mutex<(String, String)>>> {
     PRICE.clone()
 }
 
@@ -48,5 +49,14 @@ pub async fn get_symbol_price(symbol: &str) -> Result<Price> {
         Ok(Price::new(book.clone()))
     } else {
         Err(Error::ErrorMessage(format!("Symbol {} not found", symbol)))
+    }
+}
+
+pub async fn update_symbol_price(symbol: &str, book_price: (String, String)) {
+    if let Some(mutex) = get_price().get(symbol) {
+        let mut book = mutex.lock().await;
+        *book = book_price;
+    } else {
+        eprintln!("failed symbol: {:?}", symbol);
     }
 }

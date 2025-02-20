@@ -9,10 +9,13 @@ use crate::{
         CommonError, CommonResponse, IntoCommonResponse,
     },
     static_items::{
+        percision::get_symbol_percision,
+        position::{inser_user_positon, Direction, Position},
         price::get_symbol_price,
         secret_key::get_secret_key,
         strategy::{get_user_spec_strategy, get_user_strategy, update_user_strategy},
     },
+    utils::{calculate_quantity, create_position_order},
 };
 
 #[utoipa::path(
@@ -99,7 +102,7 @@ pub async fn update_strategy(
 #[utoipa::path(
     post,
     path = "/create_position",
-    request_body = UpdateStrategy,
+    request_body = CreatePositionRequest,
     responses(
         (status = 200, description = "Succeed", body = CommonResponse),
         (status = 500, description = "Internal server error", body = CommonError)
@@ -117,6 +120,13 @@ pub async fn create_position(
         )
     })?;
 
+    let percision = get_symbol_percision(&payload.symbol).await.ok_or_else(|| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(error_code::INVALIAD_SYMBOLE.into()),
+        )
+    })?;
+
     let strategy = get_user_spec_strategy(&user_id, payload.strategy_id)
         .await
         .ok_or_else(|| {
@@ -125,6 +135,61 @@ pub async fn create_position(
                 Json(error_code::SERVER_ERROR.into()),
             )
         })?;
+
+    let (side, position_side, price) = match payload.direction {
+        Direction::Long => ("BUY", "LONG", &price.buy),
+        Direction::Short => ("SELL", "SHORT", &price.sell),
+    };
+    let price_f64: f64 = price.parse().unwrap();
+    let quantity = calculate_quantity(&payload, price_f64, percision);
+
+    let secret_key = get_secret_key(&user_id).await.ok_or_else(|| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(error_code::SERVER_ERROR.into()),
+        )
+    })?;
+
+    let order = create_position_order(
+        &payload.symbol,
+        side,
+        position_side,
+        &quantity,
+        &secret_key.key,
+        &secret_key.secret,
+    )
+    .await
+    .map_err(|e| {
+        eprintln!("Create position error: {:?}", e);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(error_code::SERVER_ERROR.into()),
+        )
+    })?;
+
+    let price_f64: f64 = order.avgPrice.parse().unwrap();
+    let position = Position::new(
+        order.orderId,
+        user_id.clone(),
+        payload.symbol,
+        price_f64,
+        payload.direction,
+        quantity,
+        payload.leverage,
+        payload.stop_loss_percent,
+        strategy,
+        secret_key.key,
+        secret_key.secret,
+    )
+    .await;
+
+    inser_user_positon(position).await.map_err(|e| {
+        eprintln!("inser_user_positon: {:?}", e);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(error_code::SERVER_ERROR.into()),
+        )
+    })?;
 
     let res = CommonResponse::default();
     Ok(Json(res))
