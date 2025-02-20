@@ -1,10 +1,7 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::static_items::{
-    position::Direction,
-    strategy::{Strategy, StrategyConfig},
-};
+use crate::static_items::{position::Direction, strategy::StrategyConfig};
 
 use super::biance_model::Risk;
 

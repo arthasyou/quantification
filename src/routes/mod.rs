@@ -1,5 +1,6 @@
 mod auth_route;
 mod fee_route;
+mod record_route;
 mod trade_route;
 mod user_route;
 

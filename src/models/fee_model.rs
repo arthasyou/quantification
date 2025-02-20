@@ -16,7 +16,3 @@ pub struct CreateFeeRequest {
     pub agent_id: String,
     pub amount: f64,
 }
-
-pub struct CreateFeeResponse {
-    pub id: String,
-}

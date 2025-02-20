@@ -1,10 +1,10 @@
 pub mod auth_model;
 pub mod biance_model;
 pub mod fee_model;
+pub mod record_model;
 pub mod trade_model;
 pub mod user_model;
 
-use rust_decimal::Decimal;
 use serde::Serialize;
 
 use utoipa::ToSchema;
@@ -57,14 +57,3 @@ impl Into<CommonError> for (u16, &str) {
         }
     }
 }
-
-// impl ToSchema for Decimal {
-//     fn schema() -> utoipa::openapi::Schema {
-//         utoipa::openapi::Schema {
-//             r#type: Some(utoipa::openapi::schema::Type::String),
-//             format: Some("decimal".to_string()),
-//             description: Some("High precision decimal number".to_string()),
-//             ..Default::default()
-//         }
-//     }
-// }

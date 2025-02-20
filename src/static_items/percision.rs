@@ -12,7 +12,6 @@ use super::symbol;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Percision {
-    pub symbol: String,
     pub value: u8,
 }
 
@@ -44,7 +43,6 @@ impl PercisionsManager {
                 self.keys.lock().await.insert(
                     symbol.to_string(),
                     Percision {
-                        symbol: symbol.to_string(),
                         value: symbol_info.quantityPrecision,
                     },
                 );

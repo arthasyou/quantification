@@ -246,6 +246,15 @@ impl PositionManager {
             }
         }
     }
+
+    pub async fn get_symbol_positions(&self, symbol: &str) -> Vec<Position> {
+        if let Some(mutex_vec) = self.keys.get(symbol) {
+            let vec = mutex_vec.lock().await;
+            vec.clone()
+        } else {
+            Vec::new()
+        }
+    }
 }
 
 fn get_position_manager() -> Arc<PositionManager> {
@@ -264,4 +273,8 @@ pub async fn update_symbol_position_price(symbol: &str, price: (String, String))
     get_position_manager()
         .update_position_price(symbol, price)
         .await;
+}
+
+pub async fn get_symbol_positions(symbol: &str) -> Vec<Position> {
+    get_position_manager().get_symbol_positions(symbol).await
 }
