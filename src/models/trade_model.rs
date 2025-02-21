@@ -35,7 +35,7 @@ pub struct CreatePositionRequest {
 }
 
 #[derive(Deserialize, ToSchema, Debug)]
-pub struct ColsePositionRequest {
+pub struct ClosePositionRequest {
     pub symbol: String,
-    pub order_id: u64,
+    pub direction: Direction,
 }

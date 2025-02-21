@@ -247,11 +247,16 @@ impl PositionManager {
         }
     }
 
-    async fn remove_symbol_user_order_position(&self, symbol: &str, user_id: &str, order_id: u64) {
-        if let Some(mutex_vec) = self.keys.get(symbol) {
+    async fn remove_user_symbol_direction_position(
+        &self,
+        symbol: &str,
+        user_id: &str,
+        direction: &Direction,
+    ) {
+        if let Some(mutex_vec) = self.keys.get(symbol.to_lowercase().as_str()) {
             let mut vec = mutex_vec.lock().await;
             vec.retain(|t| {
-                if t.user_id == user_id && t.order_id == order_id {
+                if t.user_id == user_id && t.direction == *direction {
                     false
                 } else {
                     true
@@ -292,8 +297,12 @@ pub async fn get_symbol_positions(symbol: &str) -> Vec<Position> {
     get_position_manager().get_symbol_positions(symbol).await
 }
 
-pub async fn remove_symbol_user_order_position(symbol: &str, user_id: &str, order_id: u64) {
+pub async fn remove_user_symbol_direction_position(
+    symbol: &str,
+    user_id: &str,
+    direction: &Direction,
+) {
     get_position_manager()
-        .remove_symbol_user_order_position(symbol, user_id, order_id)
+        .remove_user_symbol_direction_position(symbol, user_id, direction)
         .await;
 }

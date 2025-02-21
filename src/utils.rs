@@ -1,8 +1,9 @@
 use serde::Deserialize;
 
+use crate::biance::biance_trade::get_biance_risk;
 use crate::biance::order::get_biance_active_order;
 use crate::error::{Error, Result};
-use crate::models::biance_model::BiannceOrder;
+use crate::models::biance_model::{BiannceOrder, Risk};
 use crate::{biance::order::create_biance_order, models::trade_model::CreatePositionRequest};
 
 pub fn calculate_quantity(
@@ -46,6 +47,28 @@ pub async fn create_position_order(
         Ok(order) => get_biance_active_order(symbol, order.orderId, key, secret).await,
         Err(e) => Err(Error::ErrorMessage(format!("Order failed: {}", e))),
     }
+}
+
+pub async fn get_symbol_direction_quantity(
+    symbol: &str,
+    position_side: &str,
+    key: &str,
+    secret: &str,
+) -> Result<String> {
+    let risks = get_biance_risk(key, secret)
+        .await
+        .map_err(|_e| Error::ErrorMessage("Symbol not found".to_string()))?;
+
+    let filtered_risks: Vec<Risk> = risks
+        .into_iter()
+        .filter(|risk| risk.symbol == symbol.to_uppercase() && risk.position_side == position_side)
+        .collect();
+    if filtered_risks.is_empty() {
+        return Err(Error::ErrorMessage("Symbol not found".to_string()));
+    }
+    let amt = filtered_risks[0].position_amt;
+    let quantity = amt.abs().to_string();
+    Ok(quantity)
 }
 
 pub fn trim_trailing_zeros(input: &str) -> String {

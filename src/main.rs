@@ -27,13 +27,6 @@ async fn main() {
     create_tables().await.unwrap();
     init_percisions().await;
 
-    let symbols = static_items::symbol::get_symbols();
-    for symbol in symbols {
-        let a = static_items::percision::get_symbol_percision(&symbol).await;
-
-        println!("{}: {:?}", symbol, a);
-    }
-
     let jwt = Arc::new(Jwt::new(settings.jwt));
     let router = routes::create_routes(jwt);
     let http_task = http_server::start(settings.http.port, router);
