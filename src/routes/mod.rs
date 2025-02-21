@@ -7,6 +7,7 @@ mod user_route;
 use auth_route::{routes_auth, AuthApi};
 use axum::{middleware, Extension, Router};
 use fee_route::routes_fee;
+use record_route::{routes_record, RecordApi};
 use service_utils_rs::services::{
     http::middleware::{auth_mw::auth, cors::create_cors},
     jwt::Jwt,
@@ -22,7 +23,8 @@ use utoipa_swagger_ui::SwaggerUi;
         nest(
             (path = "/auth", api = AuthApi),
             (path = "/user", api = UserApi),
-            (path = "/trade", api = TradeApi)
+            (path = "/trade", api = TradeApi),
+            (path = "/record", api = RecordApi)
         ),
     )]
 struct ApiDoc;
@@ -36,6 +38,7 @@ pub fn create_routes(jwt: Arc<Jwt>) -> Router {
         .nest("/user", routes_user())
         .nest("/fee", routes_fee())
         .nest("/trade", routes_trade())
+        .nest("/record", routes_record())
         .route_layer(middleware::from_fn(auth))
         .nest("/auth", routes_auth())
         .layer(Extension(jwt))

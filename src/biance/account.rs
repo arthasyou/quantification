@@ -31,35 +31,3 @@ pub async fn get_account() -> Result<AccountInfo> {
     // 调用 get_request 发起请求并解析为 AccountInfo
     super::request(&url, Method::GET, &super::API_KEY).await
 }
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct BiannceOrder {
-    pub orderId: u64,
-    pub avgPrice: String,
-    pub executedQty: String,
-}
-
-pub async fn get_biance_active_order(
-    symbol: &str,
-    order_id: u64,
-    key: &str,
-    secret: &str,
-) -> Result<BiannceOrder> {
-    let endpoint = format!("{}/fapi/v1/order", super::BASE_URL);
-
-    // 获取当前时间戳
-    let timestamp = super::create_timestamp();
-
-    // 准备查询字符串并生成签名
-    let query_string = format!(
-        "symbol={}&orderId={}&timestamp={}",
-        symbol, order_id, timestamp
-    );
-    let signature = super::create_signature(secret, &query_string);
-
-    // 完整请求 URL，包含签名
-    let url = format!("{}?{}&signature={}", endpoint, query_string, signature);
-
-    // 调用 get_request 发起请求并解析为 AccountInfo
-    super::request(&url, Method::GET, key).await
-}

@@ -1,4 +1,7 @@
-use crate::error::Result;
+use crate::{
+    error::Result,
+    models::biance_model::{BiannceOrder, TradeRecord},
+};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -63,30 +66,13 @@ pub async fn create_biance_order(
     Ok(response)
 }
 
-pub async fn get_orders(symbol: &str) -> Result<Vec<OrderResponse>> {
-    let endpoint = format!("{}/fapi/v1/allOrders", super::BASE_URL);
-
-    // 获取当前时间戳
-    let timestamp = super::create_timestamp();
-
-    // 准备查询字符串并生成签名
-    let query_string = format!("symbol={}&timestamp={}", symbol, timestamp);
-    let signature = super::create_signature(&super::API_SECRET, &query_string);
-
-    // 完整请求 URL，包含签名
-    let url = format!("{}?{}&signature={}", endpoint, query_string, signature);
-
-    // 调用 get_request 发起请求并解析为 AccountInfo
-    super::request::<Vec<OrderResponse>>(&url, Method::GET, &super::API_KEY).await
-}
-
 #[derive(Debug, Deserialize)]
 pub struct CancelOrderResponse {
     // 根据 API 文档定义响应字段
     orderId: u64,
 }
 
-pub async fn cancel_order(symbol: &str, order_id: u64) -> Result<CancelOrderResponse> {
+pub async fn cancel_biance_order(symbol: &str, order_id: u64) -> Result<CancelOrderResponse> {
     let endpoint = format!("{}/fapi/v1/order", super::BASE_URL);
 
     // 获取当前时间戳
@@ -104,4 +90,71 @@ pub async fn cancel_order(symbol: &str, order_id: u64) -> Result<CancelOrderResp
 
     // 调用 get_request 发起请求并解析为 AccountInfo
     super::request::<CancelOrderResponse>(&url, Method::DELETE, &super::API_KEY).await
+}
+
+pub async fn get_biance_orders(symbol: &str) -> Result<Vec<OrderResponse>> {
+    let endpoint = format!("{}/fapi/v1/allOrders", super::BASE_URL);
+
+    // 获取当前时间戳
+    let timestamp = super::create_timestamp();
+
+    // 准备查询字符串并生成签名
+    let query_string = format!("symbol={}&timestamp={}", symbol, timestamp);
+    let signature = super::create_signature(&super::API_SECRET, &query_string);
+
+    // 完整请求 URL，包含签名
+    let url = format!("{}?{}&signature={}", endpoint, query_string, signature);
+
+    // 调用 get_request 发起请求并解析为 AccountInfo
+    super::request::<Vec<OrderResponse>>(&url, Method::GET, &super::API_KEY).await
+}
+
+pub async fn get_biance_active_order(
+    symbol: &str,
+    order_id: u64,
+    key: &str,
+    secret: &str,
+) -> Result<BiannceOrder> {
+    let endpoint = format!("{}/fapi/v1/order", super::BASE_URL);
+
+    // 获取当前时间戳
+    let timestamp = super::create_timestamp();
+
+    // 准备查询字符串并生成签名
+    let query_string = format!(
+        "symbol={}&orderId={}&timestamp={}",
+        symbol, order_id, timestamp
+    );
+    let signature = super::create_signature(secret, &query_string);
+
+    // 完整请求 URL，包含签名
+    let url = format!("{}?{}&signature={}", endpoint, query_string, signature);
+
+    // 调用 get_request 发起请求并解析为 AccountInfo
+    super::request(&url, Method::GET, key).await
+}
+
+pub async fn get_biance_finished_order(
+    symbol: &str,
+    order_id: u64,
+    key: &str,
+    secret: &str,
+) -> Result<Vec<TradeRecord>> {
+    let endpoint = format!("{}/fapi/v1/userTrades", super::BASE_URL);
+
+    // 获取当前时间戳
+    let timestamp = super::create_timestamp();
+
+    // 准备查询字符串并生成签名
+    let query_string = format!(
+        "symbol={}&orderId={}&timestamp={}",
+        symbol, order_id, timestamp
+    );
+    let signature = super::create_signature(secret, &query_string);
+
+    // 完整请求 URL，包含签名
+    let url = format!("{}?{}&signature={}", endpoint, query_string, signature);
+
+    // 调用 get_request 发起请求并解析为 AccountInfo
+    super::request(&url, Method::GET, key).await
 }

@@ -1,6 +1,5 @@
 // mod account;
 pub mod account;
-pub mod biance_record;
 pub mod biance_trade;
 pub mod leverage;
 pub mod order;

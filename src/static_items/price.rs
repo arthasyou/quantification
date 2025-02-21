@@ -43,6 +43,15 @@ fn get_price() -> Arc<HashMap<String, Mutex<(String, String)>>> {
     PRICE.clone()
 }
 
+pub async fn get_all_price() -> HashMap<String, Price> {
+    let mut result = HashMap::new();
+    for (symbol, mutex) in get_price().iter() {
+        let book = mutex.lock().await;
+        result.insert(symbol.clone(), Price::new(book.clone()));
+    }
+    result
+}
+
 pub async fn get_symbol_price(symbol: &str) -> Result<Price> {
     if let Some(mutex) = get_price().get(symbol) {
         let book = mutex.lock().await;

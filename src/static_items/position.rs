@@ -247,6 +247,19 @@ impl PositionManager {
         }
     }
 
+    async fn remove_symbol_user_order_position(&self, symbol: &str, user_id: &str, order_id: u64) {
+        if let Some(mutex_vec) = self.keys.get(symbol) {
+            let mut vec = mutex_vec.lock().await;
+            vec.retain(|t| {
+                if t.user_id == user_id && t.order_id == order_id {
+                    false
+                } else {
+                    true
+                }
+            });
+        }
+    }
+
     pub async fn get_symbol_positions(&self, symbol: &str) -> Vec<Position> {
         if let Some(mutex_vec) = self.keys.get(symbol) {
             let vec = mutex_vec.lock().await;
@@ -277,4 +290,10 @@ pub async fn update_symbol_position_price(symbol: &str, price: (String, String))
 
 pub async fn get_symbol_positions(symbol: &str) -> Vec<Position> {
     get_position_manager().get_symbol_positions(symbol).await
+}
+
+pub async fn remove_symbol_user_order_position(symbol: &str, user_id: &str, order_id: u64) {
+    get_position_manager()
+        .remove_symbol_user_order_position(symbol, user_id, order_id)
+        .await;
 }

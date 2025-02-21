@@ -31,6 +31,7 @@ pub async fn start_websocket() {
 
 async fn connect_to_websocket(symbol: String) {
     let url = format_url(&symbol);
+    let mut flag = false;
     // let key = symbol.to_string();
     loop {
         match connect_async(Url::parse(&url).unwrap()).await {
@@ -41,6 +42,11 @@ async fn connect_to_websocket(symbol: String) {
                         Ok(Some(inner_msg)) => match inner_msg {
                             Ok(Message::Text(text)) => match utils::parse_trade_json(&text) {
                                 Ok(data) => {
+                                    if !flag {
+                                        flag = true;
+                                        println!("price=={:?}: {:?}", symbol, text);
+                                    }
+                                    // println!("price=={:?}: {:?}", symbol, text);
                                     let book_price = (
                                         trim_trailing_zeros(&data.a),
                                         trim_trailing_zeros(&data.b),

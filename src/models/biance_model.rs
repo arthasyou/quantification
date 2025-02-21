@@ -99,3 +99,13 @@ pub struct TradeRecord {
     symbol: String,     // 交易对
     time: u64,          // 时间
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BiannceOrder {
+    #[serde(rename = "orderId")]
+    pub order_id: u64,
+    #[serde(rename = "avgPrice")]
+    pub avg_price: String,
+    #[serde(rename = "executedQty")]
+    pub executed_qty: String,
+}

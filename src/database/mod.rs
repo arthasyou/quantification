@@ -1,6 +1,7 @@
 pub mod auth_db;
 pub mod fee_db;
 pub mod flow_db;
+pub mod position_db;
 pub mod strategy_db;
 pub mod user_db;
 

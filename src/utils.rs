@@ -1,11 +1,9 @@
 use serde::Deserialize;
 
-use crate::biance::account::BiannceOrder;
+use crate::biance::order::get_biance_active_order;
 use crate::error::{Error, Result};
-use crate::{
-    biance::{account::get_biance_active_order, order::create_biance_order},
-    models::trade_model::CreatePositionRequest,
-};
+use crate::models::biance_model::BiannceOrder;
+use crate::{biance::order::create_biance_order, models::trade_model::CreatePositionRequest};
 
 pub fn calculate_quantity(
     trade_request: &CreatePositionRequest,

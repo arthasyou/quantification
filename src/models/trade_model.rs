@@ -33,3 +33,9 @@ pub struct CreatePositionRequest {
     pub stop_loss_percent: f64,
     pub strategy_id: u8,
 }
+
+#[derive(Deserialize, ToSchema, Debug)]
+pub struct ColsePositionRequest {
+    pub symbol: String,
+    pub order_id: u64,
+}
