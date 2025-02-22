@@ -1,31 +1,9 @@
 use crate::{
     error::Result,
-    models::biance_model::{BiannceOrder, TradeRecord},
+    models::biance_model::{ActiveOrder, BiannceOrder, TradeRecord},
 };
 use reqwest::Method;
-use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct OrderResponse {
-    pub orderId: u64,
-
-    origQty: String,
-    price: String,
-    reduceOnly: bool,
-    side: String,
-    positionSide: String,
-    status: String,
-    stopPrice: String,
-    symbol: String,
-    timeInForce: String,
-    #[serde(rename = "type")]
-    orderType: String,
-    origType: String,
-    updateTime: i64,
-    workingType: String,
-    // 添加其他需要的字段
-}
+use serde::Deserialize;
 
 pub async fn create_biance_order(
     symbol: &str,
@@ -37,7 +15,7 @@ pub async fn create_biance_order(
     stop_price: Option<&str>,
     key: &str,
     secret: &str,
-) -> Result<OrderResponse> {
+) -> Result<ActiveOrder> {
     let endpoint = format!("{}/fapi/v1/order", super::BASE_URL);
 
     // 获取当前时间戳
@@ -61,7 +39,7 @@ pub async fn create_biance_order(
     let url = format!("{}?{}&signature={}", endpoint, query_string, signature);
 
     // 使用 post_request 发送带 body 的请求
-    let response = super::request::<OrderResponse>(&url, Method::POST, key).await?;
+    let response = super::request::<ActiveOrder>(&url, Method::POST, key).await?;
 
     Ok(response)
 }
@@ -92,7 +70,7 @@ pub async fn cancel_biance_order(symbol: &str, order_id: u64) -> Result<CancelOr
     super::request::<CancelOrderResponse>(&url, Method::DELETE, &super::API_KEY).await
 }
 
-pub async fn get_biance_orders(symbol: &str) -> Result<Vec<OrderResponse>> {
+pub async fn get_biance_orders(symbol: &str) -> Result<Vec<ActiveOrder>> {
     let endpoint = format!("{}/fapi/v1/allOrders", super::BASE_URL);
 
     // 获取当前时间戳
@@ -106,7 +84,7 @@ pub async fn get_biance_orders(symbol: &str) -> Result<Vec<OrderResponse>> {
     let url = format!("{}?{}&signature={}", endpoint, query_string, signature);
 
     // 调用 get_request 发起请求并解析为 AccountInfo
-    super::request::<Vec<OrderResponse>>(&url, Method::GET, &super::API_KEY).await
+    super::request::<Vec<ActiveOrder>>(&url, Method::GET, &super::API_KEY).await
 }
 
 pub async fn get_biance_active_order(

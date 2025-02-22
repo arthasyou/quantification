@@ -1,7 +1,7 @@
 use axum::{http::StatusCode, Extension, Json};
 
 use crate::{
-    biance::biance_trade::get_biance_risk,
+    biance::{biance_trade::get_biance_risk, leverage::change_leverage},
     database::strategy_db::db_update_strategy,
     error::error_code,
     models::{
@@ -154,6 +154,16 @@ pub async fn create_position(
             Json(error_code::SERVER_ERROR.into()),
         )
     })?;
+
+    let _ = change_leverage(&payload.symbol, payload.leverage as u32)
+        .await
+        .map_err(|e| {
+            eprintln!("change_leverage error: {:?}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(error_code::SERVER_ERROR.into()),
+            )
+        })?;
 
     let order = create_position_order(
         &payload.symbol,

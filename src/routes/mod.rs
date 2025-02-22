@@ -30,9 +30,7 @@ use utoipa_swagger_ui::SwaggerUi;
 struct ApiDoc;
 
 pub fn create_routes(jwt: Arc<Jwt>) -> Router {
-    // let mut doc = ApiDoc::openapi();
     let cors = create_cors();
-
     let doc = ApiDoc::openapi();
     Router::new()
         .nest("/user", routes_user())

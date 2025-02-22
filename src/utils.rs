@@ -44,7 +44,7 @@ pub async fn create_position_order(
     )
     .await;
     match order_response {
-        Ok(order) => get_biance_active_order(symbol, order.orderId, key, secret).await,
+        Ok(order) => get_biance_active_order(symbol, order.order_id, key, secret).await,
         Err(e) => Err(Error::ErrorMessage(format!("Order failed: {}", e))),
     }
 }

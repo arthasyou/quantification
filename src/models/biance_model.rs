@@ -109,3 +109,51 @@ pub struct BiannceOrder {
     #[serde(rename = "executedQty")]
     pub executed_qty: String,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ActiveOrder {
+    #[serde(rename = "orderId")]
+    pub order_id: u64,
+    #[serde(rename = "origQty")]
+    orig_qty: String,
+    price: String,
+    #[serde(rename = "reduceOnly")]
+    reduce_only: bool,
+    side: String,
+    #[serde(rename = "positionSide")]
+    position_side: String,
+    status: String,
+    #[serde(rename = "stopPrice")]
+    stop_price: String,
+    symbol: String,
+    #[serde(rename = "timeInForce")]
+    time_in_force: String,
+    #[serde(rename = "type")]
+    order_type: String,
+    #[serde(rename = "origType")]
+    orig_type: String,
+    #[serde(rename = "updateTime")]
+    update_time: i64,
+    #[serde(rename = "workingType")]
+    working_type: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Leverage {
+    pub leverage: u32,
+    #[serde(rename = "maxNotionalValue")]
+    pub max_notional_value: String,
+    pub symbol: String,
+}
+
+#[derive(Deserialize)]
+pub struct ExchangeInfo {
+    pub symbols: Vec<SymbolInfo>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct SymbolInfo {
+    pub symbol: String,
+    #[serde(rename = "quantityPrecision")]
+    pub quantity_precision: u8,
+}

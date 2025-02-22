@@ -1,20 +1,27 @@
 use crate::error::Result;
 use reqwest::Method;
-use rust_decimal::Decimal;
-use serde::{Deserialize, Serialize}; // 需要引入 rust-decimal crate
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AccountInfo {
-    makerCommission: i32,
-    takerCommission: i32,
-    buyerCommission: i32,
-    sellerCommission: i32,
-    canTrade: bool,
-    canWithdraw: bool,
-    canDeposit: bool,
+    #[serde(rename = "makerCommission")]
+    maker_commission: i32,
+    #[serde(rename = "takerCommission")]
+    taker_commission: i32,
+    #[serde(rename = "buyerCommission")]
+    buyer_commission: i32,
+    #[serde(rename = "sellerCommission")]
+    seller_commission: i32,
+    #[serde(rename = "canTrade")]
+    can_trade: bool,
+    #[serde(rename = "canWithdraw")]
+    can_withdraw: bool,
+    #[serde(rename = "canDeposit")]
+    can_deposit: bool,
     // 添加其他需要的字段
 }
 
+#[allow(dead_code)]
 pub async fn get_account() -> Result<AccountInfo> {
     let endpoint = format!("{}/fapi/v3/balance", super::BASE_URL);
 

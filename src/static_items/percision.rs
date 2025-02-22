@@ -43,7 +43,7 @@ impl PercisionsManager {
                 self.keys.lock().await.insert(
                     symbol.to_string(),
                     Percision {
-                        value: symbol_info.quantityPrecision,
+                        value: symbol_info.quantity_precision,
                     },
                 );
             }
