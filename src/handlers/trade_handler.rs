@@ -1,4 +1,5 @@
 use axum::{http::StatusCode, Extension, Json};
+use rust_decimal::prelude::ToPrimitive;
 
 use crate::{
     biance::{biance_trade::get_biance_risk, leverage::change_leverage},
@@ -20,7 +21,7 @@ use crate::{
         secret_key::get_secret_key,
         strategy::{get_user_spec_strategy, get_user_strategy, update_user_strategy},
     },
-    utils::{calculate_quantity, create_position_order, get_symbol_direction_quantity},
+    utils::{calculate_quantity, close_position_order, create_position_order},
 };
 
 #[utoipa::path(
@@ -155,15 +156,22 @@ pub async fn create_position(
         )
     })?;
 
-    let _ = change_leverage(&payload.symbol, payload.leverage as u32)
-        .await
-        .map_err(|e| {
-            eprintln!("change_leverage error: {:?}", e);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(error_code::SERVER_ERROR.into()),
-            )
-        })?;
+    println!("secret_key: {:?}", secret_key);
+
+    let _ = change_leverage(
+        &payload.symbol,
+        payload.leverage as u32,
+        &secret_key.key,
+        &secret_key.secret,
+    )
+    .await
+    .map_err(|e| {
+        eprintln!("change_leverage error: {:?}", e);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(error_code::SERVER_ERROR.into()),
+        )
+    })?;
 
     let order = create_position_order(
         &payload.symbol,
@@ -190,7 +198,7 @@ pub async fn create_position(
         price_f64,
         payload.direction,
         quantity,
-        payload.leverage,
+        payload.leverage as f64,
         payload.stop_loss_percent,
         strategy,
         secret_key.key,
@@ -236,26 +244,10 @@ pub async fn close_position(
         )
     })?;
 
-    let quantity = get_symbol_direction_quantity(
-        &payload.symbol,
-        position_side,
-        &secret_key.key,
-        &secret_key.secret,
-    )
-    .await
-    .map_err(|e| {
-        eprintln!("get_symbol_direction_quantity: {:?}", e);
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(error_code::SERVER_ERROR.into()),
-        )
-    })?;
-
-    let _order = create_position_order(
+    let r = close_position_order(
         &payload.symbol,
         side,
         position_side,
-        &quantity,
         &secret_key.key,
         &secret_key.secret,
     )
@@ -267,6 +259,8 @@ pub async fn close_position(
             Json(error_code::SERVER_ERROR.into()),
         )
     })?;
+
+    println!("{:?}", r);
 
     remove_user_symbol_direction_position(&payload.symbol, &user_id, &payload.direction).await;
 

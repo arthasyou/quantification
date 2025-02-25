@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 // use utoipa::ToSchema;
 
@@ -14,5 +15,5 @@ pub struct Fee {
 pub struct CreateFeeRequest {
     pub user_id: String,
     pub agent_id: String,
-    pub amount: f64,
+    pub amount: Decimal,
 }

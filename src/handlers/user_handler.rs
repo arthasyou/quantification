@@ -1,4 +1,5 @@
 use axum::{http::StatusCode, Extension, Json};
+use rust_decimal::Decimal;
 
 use crate::{
     database::{
@@ -13,6 +14,7 @@ use crate::{
     static_items::{
         secret_key::{delete_secret_key, insert_secret_key, SecretKey},
         strategy::{delete_user_strategy, insert_user_strategy},
+        user_info::{get_agent_id, insert_user_info, UserInfo},
     },
 };
 
@@ -80,6 +82,13 @@ pub async fn get_user_info(
     let key = SecretKey::new(data.user_id.clone(), data.key.clone(), data.secret.clone());
     insert_secret_key(key).await;
 
+    let user_info = UserInfo::new(
+        data.user_id.clone(),
+        data.agent_id.clone(),
+        data.balance.parse::<Decimal>().unwrap(),
+    );
+    insert_user_info(user_info).await;
+
     let strategy = db_get_strategy(&user_id).await.map_err(|e| {
         eprintln!("Database query error: {:?}", e);
         (
@@ -88,6 +97,9 @@ pub async fn get_user_info(
         )
     })?;
     insert_user_strategy(strategy).await;
+
+    let a = get_agent_id(&user_id).await;
+    println!("agent_id: {:?}", a);
 
     let res = data.into_common_response_data();
     Ok(Json(res))

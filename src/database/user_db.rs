@@ -3,7 +3,7 @@ use service_utils_rs::services::db::get_db;
 
 use crate::{
     error::{Error, Result},
-    models::user_model::{CreateUserInput, UpdateUserInfoRequest, UserInfo},
+    models::user_model::{CreateUserInput, UpdateUserInfoRequest, User},
 };
 
 pub async fn create_user_table() -> Result<()> {
@@ -27,18 +27,18 @@ pub async fn create_user_table() -> Result<()> {
     Ok(())
 }
 
-pub async fn db_create_user(input: CreateUserInput) -> Result<UserInfo> {
+pub async fn db_create_user(input: CreateUserInput) -> Result<User> {
     let db = get_db();
-    let r: Option<UserInfo> = db.create(("user", &input.user_id)).content(input).await?;
+    let r: Option<User> = db.create(("user", &input.user_id)).content(input).await?;
     match r {
         Some(user) => Ok(user),
         None => Err(Error::ErrorMessage("create user failed".to_owned())),
     }
 }
 
-pub async fn db_get_user_info(user_id: &str) -> Result<UserInfo> {
+pub async fn db_get_user_info(user_id: &str) -> Result<User> {
     let db = get_db();
-    let r: Option<UserInfo> = db.select(("user", user_id)).await?;
+    let r: Option<User> = db.select(("user", user_id)).await?;
     match r {
         Some(user) => Ok(user),
         None => Err(Error::ErrorMessage("get user failed".to_owned())),
@@ -53,7 +53,7 @@ pub async fn db_update_player() -> Result<()> {
         balance: 11.3,
         // updated_at: chrono::Utc::now(),
     };
-    let r: Option<UserInfo> = db.update(("user", "1")).content(input).await?;
+    let r: Option<User> = db.update(("user", "1")).content(input).await?;
     println!("create player: {:?}", r);
     Ok(())
 }

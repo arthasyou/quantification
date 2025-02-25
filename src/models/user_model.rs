@@ -4,7 +4,7 @@ use utoipa::{PartialSchema, ToSchema};
 // use utoipa::ToSchema;
 
 #[derive(Debug, Deserialize, Serialize, ToSchema)]
-pub struct UserInfo {
+pub struct User {
     pub user_id: String,
     pub agent_id: String,
     pub balance: String,
@@ -34,7 +34,7 @@ pub struct CreateUserInput {
 #[derive(Serialize, ToSchema)]
 pub struct UserResponse {
     pub code: u16,
-    pub data: UserInfo,
+    pub data: User,
     pub message: String,
 }
 

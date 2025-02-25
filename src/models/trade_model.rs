@@ -28,7 +28,7 @@ pub struct UpdateStrategy {
 pub struct CreatePositionRequest {
     pub symbol: String,
     pub direction: Direction,
-    pub leverage: f64,
+    pub leverage: u8,
     pub margin: f64,
     pub stop_loss_percent: f64,
     pub strategy_id: u8,

@@ -77,7 +77,7 @@ pub struct Risk {
     pub update_time: i64, // 更新时间
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TradeRecord {
     buyer: bool,        // 是否是买方
     commission: String, // 手续费
@@ -92,7 +92,7 @@ pub struct TradeRecord {
     #[serde(rename = "quoteQty")]
     quote_qty: String, // 成交额
     #[serde(rename = "realizedPnl")]
-    realized_pnl: String, // 实现盈亏
+    pub realized_pnl: String, // 实现盈亏
     side: String,       // 买卖方向
     #[serde(rename = "positionSide")]
     position_side: String, // 持仓方向

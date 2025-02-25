@@ -7,6 +7,8 @@ use reqwest::Method;
 pub async fn change_leverage(
     symbol: &str,  // 交易对符号，例如 "BTCUSDT"
     leverage: u32, // 杠杆倍数，范围 1 到 125
+    key: &str,
+    secret: &str,
 ) -> Result<Leverage> {
     let endpoint = format!("{}/fapi/v1/leverage", super::BASE_URL);
 
@@ -20,11 +22,11 @@ pub async fn change_leverage(
     );
 
     // 生成签名
-    let signature = super::create_signature(&super::API_SECRET, &query_string);
+    let signature = super::create_signature(secret, &query_string);
     let url = format!("{}?{}&signature={}", endpoint, query_string, signature);
 
     // 使用 post_request 发送请求
-    let response = super::request::<Leverage>(&url, Method::POST, &super::API_KEY).await?;
+    let response = super::request::<Leverage>(&url, Method::POST, key).await?;
 
     Ok(response)
 }
