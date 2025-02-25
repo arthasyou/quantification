@@ -243,6 +243,7 @@ pub async fn close_position(
     })?;
 
     let r = close_position_order(
+        &user_id,
         &payload.symbol,
         side,
         position_side,
@@ -257,8 +258,6 @@ pub async fn close_position(
             Json(error_code::SERVER_ERROR.into()),
         )
     })?;
-
-    println!("{:?}", r);
 
     remove_user_symbol_direction_position(&payload.symbol, &user_id, &payload.direction).await;
 

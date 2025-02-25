@@ -1,11 +1,15 @@
+use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
 use crate::biance::biance_trade::get_biance_risk;
 
 use crate::biance::order::{get_biance_active_order, get_biance_finished_order};
+use crate::database::fee_db::db_create_fee;
 use crate::error::{Error, Result};
 use crate::models::biance_model::{BiannceOrder, Risk, TradeRecord};
+use crate::models::fee_model::CreateFeeRequest;
+use crate::static_items::user_info::get_agent_id;
 use crate::{biance::order::create_biance_order, models::trade_model::CreatePositionRequest};
 
 pub fn calculate_quantity(
@@ -74,6 +78,7 @@ pub async fn get_symbol_direction_quantity(
 }
 
 pub async fn close_position_order(
+    user_id: &str,
     symbol: &str,
     side: &str,
     position_side: &str,
@@ -88,7 +93,13 @@ pub async fn close_position_order(
             Ok(active_order) => {
                 // 计算佣金
                 let commission = calculate_total_commission(&active_order);
-                println!("Total commission: {}", commission);
+                let agent_id = get_agent_id(user_id).await.unwrap_or("".to_string());
+                let input = CreateFeeRequest {
+                    user_id: user_id.to_string(),
+                    agent_id,
+                    amount: commission.to_f64().unwrap_or(0.0),
+                };
+                db_create_fee(input).await?;
                 Ok(active_order)
             }
             Err(e) => Err(Error::ErrorMessage(format!(

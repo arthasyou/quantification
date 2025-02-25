@@ -26,10 +26,8 @@ pub async fn create_fee_table() -> Result<()> {
 }
 
 pub async fn db_create_fee(input: CreateFeeRequest) -> Result<()> {
-    println!("create fee input: {:?}", input);
     let db = get_db();
-    let r: Option<Fee> = db.create("fee").content(input).await?;
-    println!("create fee: {:?}", r);
+    let _r: Option<Fee> = db.create("fee").content(input).await?;
     Ok(())
 }
 

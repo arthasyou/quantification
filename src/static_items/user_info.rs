@@ -63,15 +63,28 @@ pub async fn insert_user_info(key: UserInfo) {
     get_key_manager().insert_user_info(key).await;
 }
 
-pub async fn get_user_info(user_id: &str) -> Option<UserInfo> {
-    get_key_manager().get_user_info(user_id).await
-}
-
 pub async fn delete_user_info(user_id: &str) {
     get_key_manager().delete_user_info(user_id).await;
 }
 
 pub async fn get_agent_id(user_id: &str) -> Option<String> {
-    let key = get_key_manager().get_user_info(user_id).await?;
-    Some(key.agent_id)
+    let info = get_key_manager().get_user_info(user_id).await?;
+    Some(info.agent_id)
+}
+
+pub async fn get_user_balance(user_id: &str) -> Option<Decimal> {
+    let info = get_key_manager().get_user_info(user_id).await?;
+    Some(info.balance)
+}
+
+pub async fn add_user_balance(user_id: &str, amount: Decimal) -> Option<Decimal> {
+    let mut info = get_key_manager().get_user_info(user_id).await?;
+    info.balance += amount;
+    Some(info.balance)
+}
+
+pub async fn sub_user_balance(user_id: &str, amount: Decimal) -> Option<Decimal> {
+    let mut info = get_key_manager().get_user_info(user_id).await?;
+    info.balance -= amount;
+    Some(info.balance)
 }
