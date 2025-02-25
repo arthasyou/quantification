@@ -242,7 +242,7 @@ pub async fn close_position(
         )
     })?;
 
-    let r = close_position_order(
+    let _r = close_position_order(
         &user_id,
         &payload.symbol,
         side,

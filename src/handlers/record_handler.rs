@@ -1,12 +1,7 @@
 use axum::{extract::Query, http::StatusCode, Extension, Json};
 
 use crate::{
-    database::fee_db::db_create_fee,
-    error::error_code,
-    models::{
-        fee_model::CreateFeeRequest, record_model::GetPositionsRequest, CommonError,
-        CommonResponse, IntoCommonResponse,
-    },
+    models::{record_model::GetPositionsRequest, CommonError, CommonResponse, IntoCommonResponse},
     static_items::position::{get_symbol_positions, Position},
 };
 
