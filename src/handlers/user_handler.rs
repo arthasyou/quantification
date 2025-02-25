@@ -14,7 +14,7 @@ use crate::{
     static_items::{
         secret_key::{delete_secret_key, insert_secret_key, SecretKey},
         strategy::{delete_user_strategy, insert_user_strategy},
-        user_info::{get_agent_id, insert_user_info, UserInfo},
+        user_info::{delete_user_info, get_agent_id, insert_user_info, UserInfo},
     },
 };
 
@@ -119,6 +119,7 @@ pub async fn logout(
 ) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
     delete_secret_key(&user_id).await;
     delete_user_strategy(&user_id).await;
+    delete_user_info(&user_id).await;
     let res = CommonResponse::default();
     Ok(Json(res))
 }

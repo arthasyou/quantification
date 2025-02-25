@@ -8,8 +8,7 @@ use utoipa::ToSchema;
 
 #[derive(Deserialize, Serialize, ToSchema, Debug, Clone)]
 pub struct Strategy {
-    pub min: f64,
-    pub max: Option<f64>,
+    pub max: f64,
     pub adjustment: f64,
 }
 
@@ -23,59 +22,54 @@ impl Default for StrategyConfig {
     fn default() -> Self {
         let strategies = vec![
             Strategy {
-                min: 0.10,
-                max: Some(0.19),
+                // min: 0.10,
+                max: 0.10,
                 adjustment: 0.02,
             },
             Strategy {
-                min: 0.20,
-                max: Some(0.29),
+                // min: 0.20,
+                max: 0.20,
                 adjustment: 0.04,
             },
             Strategy {
-                min: 0.30,
-                max: Some(0.39),
+                // min: 0.30,
+                max: 0.30,
                 adjustment: 0.09,
             },
             Strategy {
-                min: 0.40,
-                max: Some(0.49),
+                // min: 0.40,
+                max: 0.40,
                 adjustment: 0.16,
             },
             Strategy {
-                min: 0.50,
-                max: Some(0.59),
+                // min: 0.50,
+                max: 0.50,
                 adjustment: 0.25,
             },
             Strategy {
-                min: 0.60,
-                max: Some(0.69),
+                // min: 0.60,
+                max: 0.60,
                 adjustment: 0.36,
             },
             Strategy {
-                min: 0.70,
-                max: Some(0.79),
+                // min: 0.70,
+                max: 0.70,
                 adjustment: 0.49,
             },
             Strategy {
-                min: 0.7999,
-                max: Some(0.89),
+                // min: 0.7999,
+                max: 0.80,
                 adjustment: 0.64,
             },
             Strategy {
-                min: 0.8999,
-                max: Some(1.0),
+                // min: 0.7999,
+                max: 0.90,
+                adjustment: 0.74,
+            },
+            Strategy {
+                // min: 0.8999,
+                max: 1.0,
                 adjustment: 0.81,
-            },
-            Strategy {
-                min: 0.9999,
-                max: Some(1.1),
-                adjustment: 0.90,
-            },
-            Strategy {
-                min: 1.1,
-                max: None,
-                adjustment: 0.1,
             },
         ];
 

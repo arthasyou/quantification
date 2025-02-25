@@ -36,15 +36,15 @@ pub struct Position {
     pub symbol: String, // 货币或资产符号，表示此交易涉及的交易品种，如 "EUR/USD" 或 "AAPL"
     pub entry_price: f64, // 入场价格，交易开始时的初始价格
     pub stop_loss: f64, // 止损点位，如果当前价格达到该值，交易将自动平仓以限制损失
-    highest_price: f64, // 记录历史最高价格，用于动态调整止损点和判断利润情况（做多时）
-    lowest_price: f64,  // 记录历史最低价格，用于动态调整止损点和判断利润情况（做空时）
+    pub highest_price: f64, // 记录历史最高价格，用于动态调整止损点和判断利润情况（做多时）
+    pub lowest_price: f64, // 记录历史最低价格，用于动态调整止损点和判断利润情况（做空时）
     pub direction: Direction, // 交易方向，标识是做多还是做空
     pub quantity: String,
     pub leverage: f64,
-    pub strategy: Vec<Strategy>,
+    pub strategies: Vec<Strategy>,
     pub is_closed: bool,
-    api_key: String,
-    api_secret: String,
+    pub api_key: String,
+    pub api_secret: String,
 }
 
 impl Position {
@@ -58,13 +58,18 @@ impl Position {
         quantity: String,
         leverage: f64,
         stop_loss_percent: f64,
-        strategy: Vec<Strategy>,
+        mut strategies: Vec<Strategy>,
         api_key: String,
         api_secret: String,
     ) -> Self {
         let stop_loss = calculate_stop_price(&direction, entry_price, leverage, stop_loss_percent);
 
         let stop_order_id = order_id;
+
+        strategies.push(Strategy {
+            max: 1.1,
+            adjustment: 0.1,
+        });
 
         Self {
             user_id,
@@ -78,7 +83,7 @@ impl Position {
             direction,
             quantity,
             leverage,
-            strategy,
+            strategies,
             is_closed: false,
             api_key,
             api_secret,
@@ -125,23 +130,25 @@ impl Position {
     fn calculate_new_stop_loss(&mut self, profit_percentage: f64, is_long: bool) -> f64 {
         let actual_price_change_percentage = profit_percentage * self.leverage;
 
-        let adjustment = get_strategy(actual_price_change_percentage, &mut self.strategy);
+        let adjustement = get_adjustment(actual_price_change_percentage, &mut self.strategies);
 
-        if adjustment == 0.0 {
+        println!("adjustement: {}", adjustement);
+
+        if adjustement == 0.0 {
             return self.stop_loss;
         }
 
         if is_long {
             if actual_price_change_percentage >= 1.09 {
-                self.highest_price * (1.0 - adjustment / self.leverage)
+                self.highest_price * (1.0 - adjustement / self.leverage)
             } else {
-                self.entry_price * (1.0 + adjustment / self.leverage)
+                self.entry_price * (1.0 + adjustement / self.leverage)
             }
         } else {
             if actual_price_change_percentage >= 1.09 {
-                self.lowest_price * (1.0 + adjustment / self.leverage)
+                self.lowest_price * (1.0 + adjustement / self.leverage)
             } else {
-                self.entry_price * (1.0 - adjustment / self.leverage)
+                self.entry_price * (1.0 - adjustement / self.leverage)
             }
         }
     }
@@ -196,13 +203,16 @@ pub fn calculate_stop_price(
     }
 }
 
-fn get_strategy(percentage: f64, strategy: &mut Vec<Strategy>) -> f64 {
-    strategy.retain(|adj| percentage <= adj.max.unwrap_or(f64::INFINITY));
-
-    strategy
-        .iter()
-        .find(|adj| percentage >= adj.min && adj.max.map_or(true, |max| percentage < max))
-        .map_or_else(|| 0.0, |adj| adj.adjustment)
+fn get_adjustment(percentage: f64, strategies: &mut Vec<Strategy>) -> f64 {
+    let strategy = strategies.iter().find(|adj| percentage >= adj.max);
+    let r = strategy.map_or_else(|| 0.0, |adj| adj.adjustment);
+    match strategy {
+        Some(_s) => {
+            strategies.retain(|adj| percentage < adj.max);
+        }
+        None => {}
+    }
+    r
 }
 
 static POSITION: LazyLock<Arc<PositionManager>> = LazyLock::new(PositionManager::new);
@@ -305,4 +315,200 @@ pub async fn remove_user_symbol_direction_position(
     get_position_manager()
         .remove_user_symbol_direction_position(symbol, user_id, direction)
         .await;
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::static_items::position::{Direction, Position};
+
+    use super::*;
+    // use std::f64::EPSILON;
+    const EPSILON: f64 = 1e-5;
+
+    #[test]
+    fn test_calculate_new_stop_loss_long() {
+        let strategies = vec![
+            Strategy {
+                max: 0.1,
+                adjustment: 0.02,
+            },
+            Strategy {
+                max: 0.2,
+                adjustment: 0.04,
+            },
+            Strategy {
+                max: 0.3,
+                adjustment: 0.09,
+            },
+            Strategy {
+                max: 0.4,
+                adjustment: 0.16,
+            },
+            Strategy {
+                max: 0.5,
+                adjustment: 0.25,
+            },
+            Strategy {
+                max: 0.6,
+                adjustment: 0.36,
+            },
+            Strategy {
+                max: 0.7,
+                adjustment: 0.49,
+            },
+            Strategy {
+                max: 0.8,
+                adjustment: 0.64,
+            },
+            Strategy {
+                max: 0.9,
+                adjustment: 0.81,
+            },
+            Strategy {
+                max: 1.0,
+                adjustment: 0.90,
+            },
+            Strategy {
+                max: 1.1,
+                adjustment: 0.1,
+            },
+        ];
+        let mut trade = Position {
+            user_id: "".to_string(),
+            entry_price: 4.5,
+            highest_price: 5.0,
+            lowest_price: 4.0,
+            leverage: 10.0,
+            stop_loss: 4.0,
+            order_id: 1,
+            stop_order: 1,
+            symbol: "Filusdt".to_string(),
+            direction: Direction::Long,
+            quantity: "1.0".to_string(),
+            strategies: strategies.clone(),
+            is_closed: false,
+            api_key: "".to_string(),
+            api_secret: "".to_string(),
+        };
+
+        let test_cases = vec![
+            (0.009, 4.0, "No change for profit < 10%"),
+            (0.01, 4.509, "Profit 10%"),
+            (0.02, 4.518, "Profit 20%"),
+            (0.03, 4.5405, "Profit 30%"),
+            (0.04, 4.572, "Profit 40%"),
+            (0.05, 4.6125, "Profit 50%"),
+            (0.06, 4.662, "Profit 60%"),
+            (0.07, 4.7205, "Profit 70%"),
+            (0.08, 4.788, "Profit 80%"),
+            (0.091, 4.8645, "Profit 90%"),
+            (0.1, 4.905, "Profit 100%"),
+            (0.12, 4.95, "Profit 120%"),
+        ];
+
+        for (profit, expected, description) in test_cases {
+            let result = trade.calculate_new_stop_loss(profit, true);
+            // let EPSILON = 1e-9;
+            assert!(
+                (result - expected).abs() <= EPSILON,
+                "{}: Expected {:.4}, got {:.4}",
+                description,
+                expected,
+                result
+            );
+        }
+    }
+
+    #[test]
+    fn test_calculate_new_stop_loss_short() {
+        let strategies = vec![
+            Strategy {
+                max: 0.1,
+                adjustment: 0.02,
+            },
+            Strategy {
+                max: 0.2,
+                adjustment: 0.04,
+            },
+            Strategy {
+                max: 0.3,
+                adjustment: 0.09,
+            },
+            Strategy {
+                max: 0.4,
+                adjustment: 0.16,
+            },
+            Strategy {
+                max: 0.5,
+                adjustment: 0.25,
+            },
+            Strategy {
+                max: 0.6,
+                adjustment: 0.36,
+            },
+            Strategy {
+                max: 0.7,
+                adjustment: 0.49,
+            },
+            Strategy {
+                max: 0.8,
+                adjustment: 0.64,
+            },
+            Strategy {
+                max: 0.9,
+                adjustment: 0.81,
+            },
+            Strategy {
+                max: 1.0,
+                adjustment: 0.90,
+            },
+            Strategy {
+                max: 1.1,
+                adjustment: 0.1,
+            },
+        ];
+        let mut trade = Position {
+            user_id: "".to_string(),
+            entry_price: 4.5,
+            highest_price: 5.0,
+            lowest_price: 4.0,
+            leverage: 10.0,
+            stop_loss: 5.0,
+            order_id: 1,
+            stop_order: 1,
+            symbol: "Filusdt".to_string(),
+            direction: Direction::Short,
+            quantity: "1.0".to_string(),
+            strategies,
+            is_closed: false,
+            api_key: "".to_string(),
+            api_secret: "".to_string(),
+        };
+
+        let test_cases = vec![
+            (0.009, 5.0, "No change for profit < 10%"),
+            (0.011, 4.491, "Profit 10%"),
+            (0.021, 4.482, "Profit 20%"),
+            (0.031, 4.4595, "Profit 30%"),
+            (0.041, 4.428, "Profit 40%"),
+            (0.051, 4.3875, "Profit 50%"),
+            (0.061, 4.338, "Profit 60%"),
+            (0.071, 4.2795, "Profit 70%"),
+            (0.081, 4.212, "Profit 80%"),
+            (0.091, 4.1355, "Profit 90%"),
+            (0.10, 4.095, "Profit 100%"),
+            (0.12, 4.04, "Profit 120%"),
+        ];
+
+        for (profit, expected, description) in test_cases {
+            let result = trade.calculate_new_stop_loss(profit, false);
+            assert!(
+                (result - expected).abs() < EPSILON,
+                "{}: Expected {:.4}, got {:.4}",
+                description,
+                expected,
+                result
+            );
+        }
+    }
 }

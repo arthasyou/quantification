@@ -1,6 +1,3 @@
-use axum::{http::StatusCode, Extension, Json};
-use rust_decimal::prelude::ToPrimitive;
-
 use crate::{
     biance::{biance_trade::get_biance_risk, leverage::change_leverage},
     database::strategy_db::db_update_strategy,
@@ -23,6 +20,7 @@ use crate::{
     },
     utils::{calculate_quantity, close_position_order, create_position_order},
 };
+use axum::{http::StatusCode, Extension, Json};
 
 #[utoipa::path(
     get,
