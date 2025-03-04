@@ -8,7 +8,8 @@ use service_utils_rs::services::jwt::Jwt;
 use crate::database::auth_db;
 use crate::error::error_code;
 use crate::models::auth_model::{
-    Auth, AuthInput, Login, LoginRequest, LoginResponse, SignupRequest,
+    Auth, AuthInput, Login, LoginRequest, LoginResponse, RefreshRequest, RefreshResponse,
+    SignupRequest,
 };
 use crate::models::{CommonError, CommonResponse, IntoCommonResponse};
 
@@ -78,6 +79,32 @@ pub async fn login(
     let data = Login {
         access_token: accece,
         refresh: refleash,
+    };
+    let res = data.into_common_response_data();
+    Ok(Json(res))
+}
+
+#[utoipa::path(
+    post,
+    path = "/refresh",
+    request_body = RefreshRequest,
+    responses(
+        (status = 200, description = "succeed", body = RefreshResponse),
+        (status = 500, description = "Internal server error", body = CommonError)
+    )
+)]
+pub async fn refresh_access_token(
+    Extension(jwt): Extension<Arc<Jwt>>,
+    Json(payload): Json<RefreshRequest>,
+) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
+    let accece = jwt.refresh_access_token(&payload.refresh).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(error_code::SERVER_ERROR.into()),
+        )
+    })?;
+    let data = RefreshResponse {
+        access_token: accece,
     };
     let res = data.into_common_response_data();
     Ok(Json(res))

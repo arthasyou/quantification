@@ -13,7 +13,7 @@ tokio-tungstenite = { version = "0.24.0", features = [
     "rustls-tls-native-roots",
 ] }
 axum = { version = "0.8", features = ["macros"] }
-service_utils_rs = { version = "0.3.4", features = ["jwt", "db", "http"] }
+service_utils_rs = { version = "0.3.6", features = ["jwt", "db", "http"] }
 surrealdb = { version = "2" }
 thiserror = "2"
 bcrypt = "0.17"
@@ -31,3 +31,4 @@ lazy_static = { version = "1.5" }
 dotenvy = "0.15"
 dotenvy_macro = "0.15"
 url = "2.5"
+tower-http = { version = "0.6", features = ["cors"] }

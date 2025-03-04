@@ -19,6 +19,4 @@ status_error_codes! {
     (12, PASSWORD_ERROR, "password error");
     (13, INVALIAD_SYMBOLE, "invalid symbole");
     (14, USER_NOT_FOUND, "user not found");
-    (15, USER_NOT_AUTHORIZED, "user not authorized");
-    (16, USER_NOT_PERMISSION, "user not permission");
 }

@@ -39,3 +39,13 @@ pub struct LoginResponse {
     pub data: Login,
     pub message: String,
 }
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct RefreshRequest {
+    pub refresh: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct RefreshResponse {
+    pub access_token: String,
+}

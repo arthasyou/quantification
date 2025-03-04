@@ -75,7 +75,7 @@ pub async fn get_user_info(
         eprintln!("Database query error: {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(error_code::SERVER_ERROR.into()),
+            Json(error_code::USER_NOT_FOUND.into()),
         )
     })?;
 
