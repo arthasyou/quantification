@@ -5,14 +5,15 @@ use crate::{
     models::{
         trade_model::{
             ClosePositionRequest, CreatePositionRequest, GetRiskResponse, GetStategyResponse,
-            UpdateStrategy,
+            RiskData, UpdateStrategy,
         },
         CommonError, CommonResponse, IntoCommonResponse,
     },
     static_items::{
         percision::get_symbol_percision,
         position::{
-            inser_user_positon, remove_user_symbol_direction_position, Direction, Position,
+            get_user_symbol_direction_positions, inser_user_positon,
+            remove_user_symbol_direction_position, Direction, Position,
         },
         price::get_symbol_price,
         secret_key::get_secret_key,
@@ -21,6 +22,7 @@ use crate::{
     utils::{calculate_quantity, close_position_order, create_position_order},
 };
 use axum::{http::StatusCode, Extension, Json};
+use chrono::DateTime;
 
 #[utoipa::path(
     get,
@@ -49,7 +51,38 @@ pub async fn get_risk(
             )
         })?;
 
-    let res = data.into_common_response_data();
+    println!("data: {:?}", data);
+
+    let mut risk_data = Vec::new();
+    for risk in data {
+        let direction = risk.position_side.parse::<Direction>().map_err(|_e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(error_code::SERVER_ERROR.into()),
+            )
+        })?;
+        let update_time = DateTime::from_timestamp_millis(risk.update_time).unwrap();
+        let position =
+            get_user_symbol_direction_positions(&risk.symbol.to_lowercase(), &direction, &user_id)
+                .await
+                .ok_or_else(|| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(error_code::SERVER_ERROR.into()),
+                    )
+                })?;
+        risk_data.push(RiskData {
+            symbol: risk.symbol,
+            direction,
+            margin: risk.isolated_wallet.to_string(),
+            entry_price: risk.entry_price.to_string(),
+            stop_price: position.stop_loss.to_string(),
+            quantity: position.quantity,
+            update_time,
+        });
+    }
+
+    let res = risk_data.into_common_response_data();
     Ok(Json(res))
 }
 

@@ -1,14 +1,25 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
+use utoipa::{PartialSchema, ToSchema};
 
 use crate::static_items::{position::Direction, strategy::StrategyConfig};
 
-use super::biance_model::Risk;
+#[derive(Serialize, ToSchema, Debug)]
+pub struct RiskData {
+    pub symbol: String,
+    pub direction: Direction,
+    pub margin: String,
+    pub entry_price: String,
+    pub stop_price: String,
+    pub quantity: String,
+    #[schema(schema_with = String::schema)]
+    pub update_time: DateTime<Utc>,
+}
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct GetRiskResponse {
     pub code: u16,
-    pub data: Vec<Risk>,
+    pub data: Vec<RiskData>,
     pub message: String,
 }
 

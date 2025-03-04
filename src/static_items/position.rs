@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fmt,
+    str::FromStr,
     sync::{Arc, LazyLock},
 };
 use tokio::sync::Mutex;
@@ -28,6 +29,17 @@ impl fmt::Display for Direction {
     }
 }
 
+impl FromStr for Direction {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "long" => Ok(Direction::Long),
+            "short" => Ok(Direction::Short),
+            _ => Err(format!("Invalid direction: {}", s)),
+        }
+    }
+}
 #[derive(Debug, Clone, Serialize)]
 pub struct Position {
     pub order_id: u64,
@@ -275,12 +287,21 @@ impl PositionManager {
         }
     }
 
-    pub async fn get_symbol_positions(&self, symbol: &str) -> Vec<Position> {
+    pub async fn get_user_symbol_direction_positions(
+        &self,
+        symbol: &str,
+        deriction: &Direction,
+        user_id: &str,
+    ) -> Option<Position> {
         if let Some(mutex_vec) = self.keys.get(symbol) {
             let vec = mutex_vec.lock().await;
-            vec.clone()
+            let t = vec.clone();
+            let r = t
+                .into_iter()
+                .find(|t| t.direction == *deriction && t.user_id == user_id);
+            r
         } else {
-            Vec::new()
+            None
         }
     }
 }
@@ -303,8 +324,14 @@ pub async fn update_symbol_position_price(symbol: &str, price: (String, String))
         .await;
 }
 
-pub async fn get_symbol_positions(symbol: &str) -> Vec<Position> {
-    get_position_manager().get_symbol_positions(symbol).await
+pub async fn get_user_symbol_direction_positions(
+    symbol: &str,
+    direction: &Direction,
+    user_id: &str,
+) -> Option<Position> {
+    get_position_manager()
+        .get_user_symbol_direction_positions(symbol, direction, user_id)
+        .await
 }
 
 pub async fn remove_user_symbol_direction_position(

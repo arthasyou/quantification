@@ -2,7 +2,7 @@ use axum::{extract::Query, http::StatusCode, Extension, Json};
 
 use crate::{
     models::{record_model::GetPositionsRequest, CommonError, CommonResponse, IntoCommonResponse},
-    static_items::position::{get_symbol_positions, Position},
+    static_items::position::{get_user_symbol_direction_positions, Position},
 };
 
 #[utoipa::path(
@@ -19,7 +19,8 @@ pub async fn get_positions(
     Extension(user_id): Extension<String>,
     Query(params): Query<GetPositionsRequest>,
 ) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
-    let positions = get_symbol_positions(&params.symbol).await;
+    let positions =
+        get_user_symbol_direction_positions(&params.symbol, &params.dirction, &user_id).await;
     // 根据 user_id 过滤 positions
     let filtered_positions: Vec<Position> = positions
         .into_iter()
