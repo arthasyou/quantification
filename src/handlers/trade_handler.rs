@@ -64,20 +64,29 @@ pub async fn get_risk(
         let update_time = DateTime::from_timestamp_millis(risk.update_time).unwrap();
         let position =
             get_user_symbol_direction_positions(&risk.symbol.to_lowercase(), &direction, &user_id)
-                .await
-                .ok_or_else(|| {
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(error_code::SERVER_ERROR.into()),
-                    )
-                })?;
+                .await;
+
+        let stop_loss;
+        let quantity;
+
+        match position {
+            Some(p) => {
+                stop_loss = p.stop_loss.to_string();
+                quantity = p.quantity.to_string();
+            }
+            None => {
+                stop_loss = risk.liquidation_price.to_string();
+                quantity = risk.position_amt.to_string();
+            }
+        }
+
         risk_data.push(RiskData {
             symbol: risk.symbol,
             direction,
             margin: risk.isolated_wallet.to_string(),
             entry_price: risk.entry_price.to_string(),
-            stop_price: position.stop_loss.to_string(),
-            quantity: position.quantity,
+            stop_price: stop_loss,
+            quantity,
             update_time,
         });
     }
